@@ -1,19 +1,21 @@
 var keyword_music = ["노래", "음악"];
 var keyword_greeting = ["ㅂㅇㄹ", "ㅎㅇ", "안녕"];
-var keyword_myname = ["동건봇", "동건bot", "ㄷㄱ봇", "ㄷㄱbot", "동건", "ㄷㄱ", "더거덕", "더걱"];
+var keyword_myname = ["기가동건", "동건지니","동건봇", "동건bot", "ㄷㄱ봇", "ㄷㄱbot", "이동건", "동건", "ㄷㄱ", "더거덕", "더걱"];
 var keyword_mybot = ["동건봇", "동건bot", "ㄷㄱ봇", "ㄷㄱbot"];
-var keyword_slang = ["ㅄ", "ㅂㅅ", "ㅅㅂ", "병신", "시발", "ㅂ ㅅ", "쓰레기", "벌레"];
+var keyword_slang = ["바보", "멍청", "ㅄ", "ㅂㅅ", "ㅅㅂ", "병신", "시발", "ㅂ ㅅ", "쓰레기", "벌레"];
 var keyword_WAYD = ["ㅁㅎ", "뭐해", "모함", "머함", "뭐함", "모해", 
-"머해", "뭐행", "모행", "머행"];
+"머해", "뭐행", "모행", "머행", "모하", "뭐하", "머하"];
 var keyword_dust = ["미세먼지", "먼지", "ㅁㅅㅁㅈ", "미먼"];
 var keyword_weather = ["날씨", "웨더", "weather", "비옴", "비 옴", "비와", "비 와"];
+var keyword_stock = ["주식", "주가", "시세", "현재가"]
+;
 
-var response_greeting = ["ㅎㅇ", "ㅎㅇㅎㅇ", "안녕"];
-var response_myname = ["ㅇㅇ?", "왜부름", "와이?"];
+var response_greeting = ["ㅎㅇ", "ㅎㅇㅎㅇ", "안녕", "안녕~", "안녕~!!", "안뇽", "하이"];
+var response_myname = ["ㅇㅇ?", "왜부름", "와이?", "왜불러?"];
 var response_WAYD = ["숨쉼", "카톡대기중", "눈깜빡거림", "그냥 있음", "비밀임",
 "걍 있음", "암것도안함", "ㄴㄴ", "ㄴㄴㅁㅎ", "ㄲㄲ", "니생각"];
 var response_slang = ["ㅁㅊ왜 욕해", "욕하지마셈", "왜욕함 ㅁㅊ", "왜 욕함 ㅁㅊ"];
-var exclude_myname = ["이", "가", "이가", "이랑", "은", "말고"];
+var exclude_myname = ["이", "가", "이가", "이랑", "은", "말고", "인"];
 var exclude_request = ["않", "안", "없", "마"];
 
 function isIncluded(text, keywords, exclude){
@@ -95,7 +97,43 @@ function request_weather_info(){
 
 }
 
+function request_stock(com){
+	let result = null;
+	try{
+		let url = "https://www.google.com/search?q=주식" + com.trim();
+		let html = org.jsoup.Jsoup.connect(url).get();
+		let data = html.select("g-card-section.N9cLBc");
+	
+		let select = data.select("div.OiIFo > div.E65Bx").select("div");
+		let name = select.get(1).text();
+		let code = select.get(2).text();
+	
+		select = data.select("span:nth-child(2) > span").select("span");
+		let price = select.get(1).text();
+		let currency = select.get(2).text();
+		let rate = data.select("span.WlRRw").text();
+		
+		let chart;
+		let ex = code.split(' ');
+   if(ex[0].startsWith('KRX') || ex[0].startsWith('KOSDAQ')){
+		    chart = "https://finance.naver.com/item/main.nhn?code=" + ex[1];
+	  } else {
+		    chart = "https://finance.yahoo.com/quote/" + ex[1];
+	  }
+		result = "[동건bot]" + name +" 주식\n" +  
+			code + "\n" + 
+			"현재가: " + price + currency + "\n" + 
+			rate + "\n\n" + 
+			"☞차트보러가기\n" + chart;
+	} catch(e){
+		
+result = '"동건봇 <종목> 주식"\n※일부 종목 지원 불가'          	    
+	}	
+	return result;
+}
+
 function response(room, msg, sender, isGroupChat, replier, imageDB) {
+
     var reply_msg = "";
     var reply_condition = {
         call_myname: false,
@@ -155,13 +193,26 @@ function response(room, msg, sender, isGroupChat, replier, imageDB) {
             }
         }
 
+
+
+        //주식 요청
+        if(isIncluded(msg, keyword_stock) !== false){
+                replier.reply(request_stock(msg));
+                return;
+
+        }
+
+
         //Default응답
         if(msg === ""){
             replier.reply(sender + " " + random_response(response_myname));
         }
+ else {
+            replier.reply(msg + "?".repeat(Math.floor(Math.random()*2+1)));
+        }
     }
     else if(isIncluded(msg, ["ㅋㅋ"]) !== false){
-        if(Math.random()<0.3){return;}
+        if(Math.random()<0.7){return;}
         if(sender == "영근"){
             let random = Math.floor(Math.random()*4+4);
             replier.reply("ㅋ".repeat(random));
